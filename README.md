@@ -17,7 +17,11 @@
 ```Go
 package main
 
-import "github.com/azzzak/alice"
+import (
+  "net/http"
+
+  "github.com/azzzak/alice"
+)
 
 func main() {
   updates := alice.ListenForWebhook("/hook")
