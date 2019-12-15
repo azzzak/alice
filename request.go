@@ -2,6 +2,7 @@ package alice
 
 import (
 	"errors"
+	"strings"
 )
 
 const (
@@ -19,9 +20,12 @@ type Request struct {
 		Timezone   string `json:"timezone"`
 		ClientID   string `json:"client_id"`
 		Interfaces struct {
-			Screen *struct{} `json:"screen"`
+			AccountLinking *struct{} `json:"account_linking"`
+			Screen         *struct{} `json:"screen"`
 		} `json:"interfaces"`
 	} `json:"meta"`
+
+	LinkingComplete *struct{} `json:"account_linking_complete_event,omitenpty"`
 
 	Request struct {
 		Command           string `json:"command"`
@@ -46,14 +50,18 @@ type Request struct {
 	} `json:"session"`
 
 	Version string `json:"version"`
+	Bearer  string
 }
 
 func (req *Request) clean() *Request {
 	req.Meta.Interfaces = struct {
-		Screen *struct{} `json:"screen"`
+		AccountLinking *struct{} `json:"account_linking"`
+		Screen         *struct{} `json:"screen"`
 	}{
 		nil,
+		nil,
 	}
+	req.LinkingComplete = nil
 	req.Request.Command = ""
 	req.Request.OriginalUtterance = ""
 	req.Request.Payload = nil
@@ -69,6 +77,7 @@ func (req *Request) clean() *Request {
 		[]string{},
 		[]Entity{},
 	}
+	req.Bearer = ""
 	return req
 }
 
@@ -87,9 +96,19 @@ func (req *Request) ClientID() string {
 	return req.Meta.ClientID
 }
 
-// HasScreen имеет ли устрйство пользователя экран.
+// CanAccountLinking поддерживает ли устройство пользователя создание связки аккаунтов.
+func (req *Request) CanAccountLinking() bool {
+	return req.Meta.Interfaces.AccountLinking != nil
+}
+
+// HasScreen имеет ли устройство пользователя экран.
 func (req *Request) HasScreen() bool {
 	return req.Meta.Interfaces.Screen != nil
+}
+
+// IsLinkingComplete связка аккаунтов создана.
+func (req *Request) IsLinkingComplete() bool {
+	return req.LinkingComplete != nil
 }
 
 // Command реплика пользователя, преобразованная Алисой. В частности, текст очищается от знаков препинания, а числительные преобразуются в числа.
@@ -169,4 +188,12 @@ func (req *Request) UserID() string {
 // Ver версия протокола.
 func (req *Request) Ver() string {
 	return req.Version
+}
+
+// AuthToken токен, полученный при связке аккаунтов.
+func (req *Request) AuthToken() string {
+	if req.Bearer != "" {
+		return strings.TrimPrefix(req.Bearer, "Bearer ")
+	}
+	return ""
 }

@@ -1,9 +1,11 @@
 package alice
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -148,6 +150,8 @@ func webhook(conf Options, stream chan<- Kit) http.HandlerFunc {
 			}
 		}
 
+		req.Bearer = r.Header.Get("Authorization")
+
 		back := make(chan *Response)
 		stream <- Kit{
 			Req:  req,
@@ -166,19 +170,22 @@ func webhook(conf Options, stream chan<- Kit) http.HandlerFunc {
 		case response = <-back:
 		}
 
-		b, err := json.Marshal(response)
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+		writer := io.Writer(w)
 
 		if conf.Debug {
-			fmt.Printf("\n%s\n\n", string(b))
+			var buf bytes.Buffer
+			writer = io.MultiWriter(w, &buf)
+			defer func() {
+				fmt.Printf("\n%s\n\n", buf.String())
+			}()
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(b)
+		encoder := json.NewEncoder(writer)
+		if err := encoder.Encode(&response); err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 	}
 }
 

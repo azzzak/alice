@@ -10,13 +10,15 @@ import (
 
 // Response структура исходящего сообщения.
 type Response struct {
-	Response struct {
+	Response *struct {
 		Text       string   `json:"text"`
 		TTS        string   `json:"tts,omitempty"`
 		Card       *Card    `json:"card,omitempty"`
 		Buttons    []Button `json:"buttons,omitempty"`
 		EndSession bool     `json:"end_session"`
-	} `json:"response"`
+	} `json:"response,omitempty"`
+
+	StartAccountLinking *struct{} `json:"start_account_linking,omitempty"`
 
 	Session struct {
 		MessageID int    `json:"message_id"`
@@ -28,11 +30,14 @@ type Response struct {
 }
 
 func (resp *Response) clean() *Response {
-	resp.Response.Text = ""
-	resp.Response.TTS = ""
-	resp.Response.Card = nil
-	resp.Response.Buttons = nil
-	resp.Response.EndSession = false
+	resp.Response = &struct {
+		Text       string   `json:"text"`
+		TTS        string   `json:"tts,omitempty"`
+		Card       *Card    `json:"card,omitempty"`
+		Buttons    []Button `json:"buttons,omitempty"`
+		EndSession bool     `json:"end_session"`
+	}{}
+	resp.StartAccountLinking = nil
 	return resp
 }
 
@@ -41,6 +46,14 @@ func (resp *Response) prepareResponse(req *Request) *Response {
 	resp.Session.SessionID = req.Session.SessionID
 	resp.Session.UserID = req.Session.UserID
 	resp.Version = "1.0"
+	return resp
+}
+
+// StartAuthorization начать создание связки аккаунтов и показать пользователю карточку авторизации.
+func (resp *Response) StartAuthorization() *Response {
+	// resp.Response = Response{}
+	resp.StartAccountLinking = &struct{}{}
+	resp.Response = nil
 	return resp
 }
 
