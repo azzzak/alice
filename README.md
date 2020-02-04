@@ -72,6 +72,9 @@ resp.Text(fmt.Sprintf("%d %s пива %s на столе", num,
 
 ## Навыки на базе библиотеки
 
+[![Дневник здоровья](images/health.png)](https://dialogs.yandex.ru/store/skills/dd5bb5ec-dnevnik-zdorov-ya) \
+[**Дневник здоровья**](https://dialogs.yandex.ru/store/skills/dd5bb5ec-dnevnik-zdorov-ya)
+
 [![Полезный Ждун](images/zhdun.jpeg)](https://dialogs.yandex.ru/store/skills/16ff4b52-poleznyj-zhdu) \
 [**Полезный Ждун**](https://dialogs.yandex.ru/store/skills/16ff4b52-poleznyj-zhdu)
 
