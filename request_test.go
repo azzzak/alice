@@ -487,12 +487,58 @@ func TestRequest_Ver(t *testing.T) {
 	}
 }
 
+func TestRequest_StateSession(t *testing.T) {
+	tests := map[string]struct {
+		request *alice.Request
+		want    interface{}
+	}{
+		"when state is empty 0": {
+			request: getReq(0),
+			want:    nil,
+		},
+		"when state is empty 1":{
+			request: getReq(1),
+			want:    nil,
+		},
+		"when state is empty 2":{
+			request: getReq(2),
+			want:    nil,
+		},
+	}
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			req := tt.request
+			got := req.StateSession("");
+			if !assert.Equal(t, tt.want, got) {
+				t.Errorf("Request.StateSession() = %v, want %v", got, tt.want)
+			}
+
+		})
+	}
+	t.Run("when state is struct", func(t *testing.T) {
+		req := getReq(3)
+		want := make(map[string]interface{})
+		want["int_value"] = 42
+
+		assert.Equal(t, 42.0, req.StateSession("int_value"))
+		assert.Equal(t, "exampleString", req.StateSession("string_value"))
+		assert.Equal(t, []interface{}{1.0,2.0,3.0,4.0}, req.StateSession("array_value"))
+		assert.Equal(t, map[string]interface{}{"one":"one"}, req.StateSession("struct_value"))
+		stateJson, err := req.StateSessionAsJson()
+		if assert.NoError(t, err) {
+			assert.Equal(t, `{"array_value":[1,2,3,4],"int_value":42,"string_value":"exampleString","struct_value":{"one":"one"}}`, stateJson)
+		}
+	})
+}
+
 func getReq(n int) *alice.Request {
 	source := []string{`{"meta":{"client_id":"ru.yandex.searchplugin/7.16 (none none; android 4.4.2)","interfaces":{"account_linking":{},"payments":{},"screen":{}},"locale":"ru-RU","timezone":"UTC"},"request":{"command":"съешь еще этих мягких французских булок","nlu":{"entities":[],"tokens":["съешь","еще","этих","мягких","французских","булок"]},"original_utterance":"съешь еще этих мягких французских булок","type":"SimpleUtterance"},"session":{"message_id":0,"new":true,"session_id":"e19e8eee-ae065e8-36e3f907-567a814b","skill_id":"e03f8d5b-35ef-4d57-9450-b721ca17a6c3","user_id":"03B1D487CAA1C7EBF80A195491B78ACA0AC9934CDFB12A29D063A8329BC42BF0"},"version":"1.0"}`,
 
 		`{"meta":{"client_id":"ru.yandex.searchplugin/7.16 (none none; android 4.4.2)","interfaces":{"account_linking":{},"payments":{}},"locale":"ru-RU","timezone":"UTC"},"request":{"nlu":{"entities":[],"tokens":[]},"payload":{"msg":"ok"},"type":"ButtonPressed"},"session":{"message_id":1,"new":false,"session_id":"eeb9fa7f-940e2502-1fbf9dfb-9448a1a9","skill_id":"e03f8d5b-35ef-4d57-9450-b721ca17a6c3","user_id":"03B1D487CAA1C7EBF80A195491B78ACA0AC9934CDFB12A29D063A8329BC42BF0"},"version":"1.0"}`,
 
 		`{"meta":{"client_id":"ru.yandex.searchplugin/7.16 (none none; android 4.4.2)","interfaces":{"account_linking":{},"payments":{}},"locale":"ru-RU","timezone":"UTC"},"request":{"nlu":{"entities":[],"tokens":[]},"payload":"msg","type":"ButtonPressed"},"session":{"message_id":1,"new":false,"session_id":"eeb9fa7f-940e2502-1fbf9dfb-9448a1a9","skill_id":"e03f8d5b-35ef-4d57-9450-b721ca17a6c3","user_id":"03B1D487CAA1C7EBF80A195491B78ACA0AC9934CDFB12A29D063A8329BC42BF0"},"version":"1.0"}`,
+
+		`{"meta":{"client_id":"ru.yandex.searchplugin/7.16 (none none; android 4.4.2)","interfaces":{"account_linking":{},"payments":{}},"locale":"ru-RU","timezone":"UTC"},"request":{"nlu":{"entities":[],"tokens":[]},"payload":"msg","type":"ButtonPressed"},"session":{"message_id":1,"new":false,"session_id":"eeb9fa7f-940e2502-1fbf9dfb-9448a1a9","skill_id":"e03f8d5b-35ef-4d57-9450-b721ca17a6c3","user_id":"03B1D487CAA1C7EBF80A195491B78ACA0AC9934CDFB12A29D063A8329BC42BF0"},"state":{"session":{"array_value":[1,2,3,4],"int_value":42,"string_value":"exampleString","struct_value":{"one":"one"}}},"version":"1.0"}`,
 	}
 
 	var req = new(alice.Request)

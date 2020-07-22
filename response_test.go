@@ -703,6 +703,22 @@ func TestResponse_RandomPhrase(t *testing.T) {
 	}
 }
 
+func TestResponse_AddSessionState(t *testing.T) {
+	wantResp := getResp(0)
+	state := make(map[string]interface{})
+	state["one"] = struct{}{}
+	state["two"] = "twotwo"
+	wantResp.SessionState = state
+
+	resp := getResp(0)
+	err := resp.AddSessionState("one", struct{}{})
+	assert.NoError(t, err)
+	err = resp.AddSessionState("two", "twotwo")
+	if assert.NoError(t, err) {
+		assert.Equal(t, wantResp, resp)
+	}
+}
+
 func getResp(n int) *alice.Response {
 	source := []string{`{"response":{"text":"","end_session":true},"session":{"message_id":0,"session_id":"","user_id":""},"version":"1.0"}`,
 

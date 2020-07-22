@@ -1,6 +1,7 @@
 package alice
 
 import (
+	"encoding/json"
 	"errors"
 	"strings"
 )
@@ -48,6 +49,10 @@ type Request struct {
 		SkillID   string `json:"skill_id"`
 		UserID    string `json:"user_id"`
 	} `json:"session"`
+
+	State struct {
+		Session interface{} `json:"session,omitempty"`
+	} `json:"state,omitempty"`
 
 	Version string `json:"version"`
 	Bearer  string
@@ -189,6 +194,24 @@ func (req *Request) UserID() string {
 func (req *Request) Ver() string {
 	return req.Version
 }
+
+// State.Session Состояние сессии.
+func (req *Request) StateSession(key string) interface{} {
+	if req.State.Session == nil {
+		return nil
+	}
+	session := req.State.Session.(map[string]interface{})
+
+	return session[key]
+}
+
+// State.Session Состояние сессии json строкой
+func (req *Request) StateSessionAsJson() (string, error) {
+	data, err := json.Marshal(req.State.Session)
+
+	return string(data), err
+}
+
 
 // AuthToken токен, полученный при связке аккаунтов.
 func (req *Request) AuthToken() string {
