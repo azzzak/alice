@@ -1,6 +1,7 @@
 package alice
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -26,6 +27,8 @@ type Response struct {
 		UserID    string `json:"user_id"`
 	} `json:"session"`
 
+	SessionState interface{} `json:"session_state,omitempty"`
+
 	Version string `json:"version"`
 }
 
@@ -38,6 +41,7 @@ func (resp *Response) clean() *Response {
 		EndSession bool     `json:"end_session"`
 	}{}
 	resp.StartAccountLinking = nil
+	resp.SessionState = nil
 	return resp
 }
 
@@ -217,4 +221,20 @@ func (resp *Response) RandomPhrase(p ...Phrase) *Response {
 	resp.Response.Text += p[ix].Text
 	resp.Response.TTS += p[ix].TTS
 	return resp
+}
+
+// AddSessionState добавляет па
+func (resp *Response) AddSessionState(key string, data interface{}) error {
+	if resp.SessionState == nil {
+		resp.SessionState = make(map[string]interface{})
+	}
+
+	if stateBag, ok := resp.SessionState.(map[string]interface{}); ok {
+		stateBag[key] = data
+		resp.SessionState = stateBag
+	} else {
+		return errors.New(fmt.Sprintf("session_state: can't set data because session_state have type %T",
+			resp.SessionState))
+	}
+	return nil
 }
